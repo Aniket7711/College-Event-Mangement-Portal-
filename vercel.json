@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-render-app-name.onrender.com/api/:path*"
+      "destination": "https://college-event-api-obst.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
