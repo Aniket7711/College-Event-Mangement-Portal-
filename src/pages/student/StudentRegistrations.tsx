@@ -90,7 +90,7 @@ const StudentRegistrations = () => {
                   <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">Rating:</span>
-                      {[1,2,3,4,5].map(n => (
+                      {[1, 2, 3, 4, 5].map(n => (
                         <button key={n} onClick={() => setRating(n)} className={`text-lg ${n <= rating ? 'text-warning' : 'text-muted-foreground/30'}`}>★</button>
                       ))}
                     </div>

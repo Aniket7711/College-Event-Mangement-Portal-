@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface StatsCardProps {
   title: string;
@@ -10,7 +11,11 @@ interface StatsCardProps {
 }
 
 const StatsCard = ({ title, value, icon: Icon, description, className = '' }: StatsCardProps) => (
-  <div className={`glass-card p-5 ${className}`}>
+  <motion.div 
+    whileHover={{ y: -4, scale: 1.02 }}
+    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+    className={`glass-card p-5 ${className}`}
+  >
     <div className="flex items-start justify-between">
       <div>
         <p className="text-sm text-muted-foreground">{title}</p>
@@ -21,7 +26,7 @@ const StatsCard = ({ title, value, icon: Icon, description, className = '' }: St
         <Icon className="w-5 h-5 text-primary" />
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 export default StatsCard;

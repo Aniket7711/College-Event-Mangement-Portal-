@@ -120,6 +120,52 @@
     @apply bg-gray-100 text-gray-800;
   }
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-sm;
+    @apply bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-sm transition-all duration-200 ease-out transform-gpu;
+    will-change: transform, opacity;
+  }
+  .glass-card:hover {
+    @apply border-primary/30 shadow-md -translate-y-1;
+  }
+
+  .mesh-gradient {
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(var(--primary), 0.15) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(var(--accent), 0.1) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(var(--secondary), 0.15) 0, transparent 50%);
+  }
+
+  .animate-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .animate-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: rotate(30deg);
+    transition: all 0.7s;
+  }
+  .animate-shine:hover::after {
+    left: 120%;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  @apply w-1.5;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30 transition-colors;
+}
+

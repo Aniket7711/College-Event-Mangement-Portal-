@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
+import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Calendar, Users, FileText, BarChart3, Settings,
   PlusCircle, QrCode, MessageSquare, Bell, User, CheckCircle, ClipboardList
@@ -50,34 +51,48 @@ const DashboardSidebar = () => {
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border min-h-[calc(100vh-4rem)]">
       <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold text-sm">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-3"
+        >
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold text-sm shadow-sm"
+          >
             {user.name.split(' ').map(n => n[0]).join('')}
-          </div>
+          </motion.div>
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{user.name}</p>
             <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
       <nav className="flex-1 p-3 space-y-1">
-        {links.map(link => (
-          <Link
+        {links.map((link, i) => (
+          <motion.div
             key={link.path}
-            to={link.path}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              location.pathname === link.path
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-            }`}
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: i * 0.05 }}
           >
-            {link.icon}
-            {link.label}
-          </Link>
+            <Link
+              to={link.path}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                location.pathname === link.path
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1'
+              }`}
+            >
+              <span className="group-hover:scale-110 transition-transform">{link.icon}</span>
+              {link.label}
+            </Link>
+          </motion.div>
         ))}
       </nav>
     </aside>
   );
 };
+
 
 export default DashboardSidebar;

@@ -137,7 +137,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setUser(null);
         });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message: string; role?: string }> => {
