@@ -17,6 +17,11 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: 'Name, email, password, and role are required' });
     }
 
+    // Validate roll number format (e.g. 2K21CSUN01007)
+    if (rollNumber && !/^\d[A-Za-z]\d{2}[A-Za-z]{2,4}\d{4,5}$/.test(rollNumber)) {
+      return res.status(400).json({ message: 'Invalid roll number format. Example: 2K21CSUN01007' });
+    }
+
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       return res.status(400).json({ message: 'Email already registered' });

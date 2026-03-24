@@ -10,17 +10,17 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.04,
     }
   }
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
-    y: 0,
     opacity: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 24 } as any
+    y: 0,
+    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } as any
   }
 };
 
@@ -40,9 +40,9 @@ const StudentDashboard = () => {
     <DashboardLayout>
       <div className="space-y-8">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
         >
           <h1 className="text-3xl font-display font-bold">Welcome, {user?.name?.split(' ')[0]}!</h1>
           <p className="text-muted-foreground">Keep track of your campus journey</p>
@@ -69,23 +69,16 @@ const StudentDashboard = () => {
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.2 }}
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-display font-semibold">Recommended For You</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommended.map((e, index) => (
-              <motion.div 
-                key={e.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-              >
-                <EventCard event={e} />
-              </motion.div>
+            {recommended.map(e => (
+              <EventCard key={e.id} event={e} />
             ))}
           </div>
         </motion.div>
@@ -95,4 +88,3 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
-

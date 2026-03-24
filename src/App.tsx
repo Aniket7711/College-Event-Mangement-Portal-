@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/context/AppContext";
 import { ProtectedRoute, RoleProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ScrollToTop from "@/components/shared/ScrollToTop";
 
 import HomePage from "./pages/HomePage";
 import EventsPage from "./pages/EventsPage";
@@ -48,6 +49,7 @@ const App = () => (
       <Sonner />
       <AppProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/events" element={<EventsPage />} />

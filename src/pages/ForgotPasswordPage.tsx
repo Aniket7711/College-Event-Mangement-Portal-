@@ -2,17 +2,19 @@ import { PublicLayout } from '@/components/layout/Layouts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('If an account exists with that email, a password reset link has been sent.');
+    setSubmitted(true);
     setEmail('');
   };
 
@@ -27,12 +29,20 @@ const ForgotPasswordPage = () => {
           </div>
           <h2 className="text-2xl font-display font-bold text-center mb-1">Reset Password</h2>
           <p className="text-sm text-muted-foreground text-center mb-6">Enter your email to receive a reset link</p>
+
+          <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">Password reset via email is not available yet. Please contact your college admin to reset your password.</p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label>Email</Label>
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@campus.edu" required />
             </div>
-            <Button type="submit" className="w-full">Send Reset Link</Button>
+            <Button type="submit" className="w-full" disabled={submitted}>
+              {submitted ? 'Check Your Email' : 'Send Reset Link'}
+            </Button>
           </form>
           <Link to="/login" className="flex items-center justify-center gap-1 mt-4 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Back to login

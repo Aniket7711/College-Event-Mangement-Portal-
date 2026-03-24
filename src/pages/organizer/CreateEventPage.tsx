@@ -29,8 +29,6 @@ const CreateEventPage = () => {
     try {
       await createEvent({
         ...form,
-        organizerId: user!.id,
-        organizerName: user!.name,
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         totalSeats: Number(form.totalSeats),
       });

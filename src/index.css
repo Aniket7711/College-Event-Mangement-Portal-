@@ -120,11 +120,11 @@
     @apply bg-gray-100 text-gray-800;
   }
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-sm transition-all duration-200 ease-out transform-gpu;
-    will-change: transform, opacity;
+    @apply bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-sm transform-gpu;
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   .glass-card:hover {
-    @apply border-primary/30 shadow-md -translate-y-1;
+    @apply border-primary/30 shadow-md;
   }
 
   .mesh-gradient {
@@ -156,7 +156,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 ::-webkit-scrollbar {

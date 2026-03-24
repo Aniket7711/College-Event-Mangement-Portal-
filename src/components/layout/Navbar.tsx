@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { useState } from 'react';
-import { Calendar, Menu, X, Bell, LogOut, LayoutDashboard } from 'lucide-react';
+import { Calendar, Menu, X, Bell, LogOut, LayoutDashboard, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +12,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const unreadCount = notifications.filter(n => n.userId === user?.id && !n.isRead).length;
 
@@ -62,6 +64,13 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             {user ? (
               <>
                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>

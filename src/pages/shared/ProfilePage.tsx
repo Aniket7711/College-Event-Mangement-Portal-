@@ -3,17 +3,40 @@ import { DashboardLayout } from '@/components/layout/Layouts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { DEPARTMENTS } from '@/types';
+
+const ROLL_NUMBER_REGEX = /^\d[A-Z]\d{2}[A-Z]{2,4}\d{4,5}$/;
 
 const ProfilePage = () => {
   const { user, updateProfile } = useApp();
-  const [form, setForm] = useState({ name: user?.name || '', department: user?.department || '', year: user?.year || '' });
+  const [form, setForm] = useState({
+    name: user?.name || '',
+    rollNumber: user?.rollNumber || '',
+    department: user?.department || '',
+    year: user?.year || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const rollNumberValid = !form.rollNumber || ROLL_NUMBER_REGEX.test(form.rollNumber);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile(form);
-    toast.success('Profile updated!');
+    if (form.rollNumber && !rollNumberValid) {
+      toast.error('Invalid roll number format. Example: 2K21CSUN01007');
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateProfile(form);
+      toast.success('Profile updated!');
+    } catch {
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -37,14 +60,39 @@ const ProfilePage = () => {
               <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
+              <Label>Roll Number</Label>
+              <Input
+                value={form.rollNumber}
+                onChange={e => setForm(p => ({ ...p, rollNumber: e.target.value.toUpperCase() }))}
+                placeholder="2K21CSUN01007"
+                maxLength={13}
+              />
+              {form.rollNumber && !rollNumberValid && (
+                <p className="text-xs text-destructive mt-1">Format: 2K21CSUN01007 (digit, letter, 2-digit year, dept code, number)</p>
+              )}
+            </div>
+            <div>
               <Label>Department</Label>
-              <Input value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} />
+              <Select value={form.department} onValueChange={v => setForm(p => ({ ...p, department: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Year</Label>
-              <Input value={form.year} onChange={e => setForm(p => ({ ...p, year: e.target.value }))} />
+              <Select value={form.year} onValueChange={v => setForm(p => ({ ...p, year: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1st">1st Year</SelectItem>
+                  <SelectItem value="2nd">2nd Year</SelectItem>
+                  <SelectItem value="3rd">3rd Year</SelectItem>
+                  <SelectItem value="4th">4th Year</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
           </form>
         </div>
       </div>

@@ -37,17 +37,18 @@ const HomePage = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.04,
+        delayChildren: 0.02,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 12 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: 'easeOut' } as any
+      transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } as any
     },
   };
 
@@ -56,24 +57,14 @@ const HomePage = () => {
       {/* Hero */}
       <section className="relative overflow-hidden min-h-[80vh] flex items-center" style={{ background: 'var(--gradient-hero)' }}>
         <div className="absolute inset-0 opacity-10">
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.1 }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-            className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl transform-gpu" 
-          />
-          <motion.div 
-            initial={{ scale: 1.2, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.1 }}
-            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
-            className="absolute bottom-10 right-20 w-96 h-96 bg-accent rounded-full blur-3xl transform-gpu" 
-          />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl transform-gpu" style={{ opacity: 0.1 }} />
+          <div className="absolute bottom-10 right-20 w-96 h-96 bg-accent rounded-full blur-3xl transform-gpu" style={{ opacity: 0.1 }} />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <motion.div 
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             className="max-w-2xl"
           >
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-primary-foreground leading-tight mb-6">
@@ -100,28 +91,20 @@ const HomePage = () => {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           {stats.map(s => (
             <motion.div 
               key={s.label} 
               variants={itemVariants}
-              whileHover={{ y: -5, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }}
               className="glass-card p-8 flex items-center gap-6"
             >
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <s.icon className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-3xl font-display font-bold"
-                >
-                  {s.value}
-                </motion.p>
+                <p className="text-3xl font-display font-bold">{s.value}</p>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
               </div>
             </motion.div>
@@ -132,9 +115,10 @@ const HomePage = () => {
       {/* Featured Events */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.2 }}
           className="flex items-end justify-between mb-12"
         >
           <div>
@@ -164,9 +148,10 @@ const HomePage = () => {
       <section className="bg-muted/30 py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.2 }}
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold">Everything you need</h2>
@@ -185,10 +170,9 @@ const HomePage = () => {
               <motion.div 
                 key={f.title} 
                 variants={itemVariants}
-                whileHover={{ y: -8 }}
-                className="glass-card p-8 text-center group transition-colors hover:border-primary/50"
+                className="glass-card p-8 text-center group"
               >
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
                   <f.icon className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-display font-semibold mb-3">{f.title}</h3>
@@ -202,9 +186,10 @@ const HomePage = () => {
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.3 }}
           className="glass-card p-12 md:p-20 text-center relative overflow-hidden" 
           style={{ background: 'var(--gradient-primary)' }}
         >
@@ -217,16 +202,8 @@ const HomePage = () => {
               <Link to="/signup">Create Your Account <ArrowRight className="w-5 h-5 ml-2" /></Link>
             </Button>
           </div>
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" 
-          />
-          <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-            className="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-32 -mb-32 blur-3xl" 
-          />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-32 -mb-32 blur-3xl" />
         </motion.div>
       </section>
     </PublicLayout>
@@ -234,4 +211,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

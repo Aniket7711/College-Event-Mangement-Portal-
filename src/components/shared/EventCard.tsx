@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, Tag } from 'lucide-react';
+import { Calendar, MapPin, Users } from 'lucide-react';
 import { Event } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
 
 const statusColors: Record<string, string> = {
   pending: 'status-pending',
@@ -13,46 +12,38 @@ const statusColors: Record<string, string> = {
 };
 
 const EventCard = ({ event, showStatus = false }: { event: Event; showStatus?: boolean }) => (
-  <motion.div
-    whileHover={{ y: -4, boxShadow: '0 8px 20px -6px rgba(0, 0, 0, 0.12)' }}
-    whileTap={{ scale: 0.99 }}
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.25, ease: 'easeOut' }}
-  >
-    <Link to={`/events/${event.id}`} className="glass-card overflow-hidden group block h-full transition-shadow duration-300">
-      <div className="aspect-[16/9] overflow-hidden">
-        <img src={event.posterUrl} alt={event.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+  <Link to={`/events/${event.id}`} className="glass-card overflow-hidden group block h-full">
+    <div className="aspect-[16/9] overflow-hidden">
+      <img src={event.posterUrl} alt={event.title}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out" />
+    </div>
+    <div className="p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Badge variant="secondary" className="text-xs">{event.category}</Badge>
+        {event.targetAudience && event.targetAudience !== 'All Departments' && (
+          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+            {event.targetAudience} Only
+          </Badge>
+        )}
+        {showStatus && <span className={`status-badge ${statusColors[event.status]}`}>{event.status}</span>}
       </div>
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="secondary" className="text-xs">{event.category}</Badge>
-          {event.targetAudience && event.targetAudience !== 'All Departments' && (
-            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-              {event.targetAudience} Only
-            </Badge>
-          )}
-          {showStatus && <span className={`status-badge ${statusColors[event.status]}`}>{event.status}</span>}
+      <h3 className="font-display font-semibold text-foreground line-clamp-1 mb-1 group-hover:text-primary transition-colors duration-200">{event.title}</h3>
+      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{event.shortDescription}</p>
+      <div className="space-y-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5" />
+          {new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {' · '}{event.startTime}
         </div>
-        <h3 className="font-display font-semibold text-foreground line-clamp-1 mb-1 group-hover:text-primary transition-colors">{event.title}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{event.shortDescription}</p>
-        <div className="space-y-1.5 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" />
-            {new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            {' · '}{event.startTime}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" />{event.venue}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5" />{event.registeredCount}/{event.totalSeats} registered
-          </div>
+        <div className="flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5" />{event.venue}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5" />{event.registeredCount}/{event.totalSeats} registered
         </div>
       </div>
-    </Link>
-  </motion.div>
+    </div>
+  </Link>
 );
 
 export default EventCard;
