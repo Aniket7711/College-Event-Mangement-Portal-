@@ -20,6 +20,11 @@ const EventCard = ({ event, showStatus = false }: { event: Event; showStatus?: b
     <div className="p-4">
       <div className="flex items-center gap-2 mb-2">
         <Badge variant="secondary" className="text-xs">{event.category}</Badge>
+        {event.targetAudience && event.targetAudience !== 'All Departments' && (
+          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+            {event.targetAudience} Only
+          </Badge>
+        )}
         {showStatus && <span className={`status-badge ${statusColors[event.status]}`}>{event.status}</span>}
       </div>
       <h3 className="font-display font-semibold text-foreground line-clamp-1 mb-1">{event.title}</h3>

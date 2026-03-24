@@ -6,31 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Calendar, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
-  const { login } = useApp();
+  const { login, loginWithGoogle } = useApp();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      const result = login(email, password);
-      setLoading(false);
+    try {
+      const result = await login(email, password);
       if (result.success) {
         toast.success(result.message);
-        const users = JSON.parse(localStorage.getItem('campus_users') || '[]');
-        const u = users.find((u: any) => u.email === email);
-        if (u) navigate(`/${u.role}/dashboard`);
+        if (result.role) navigate(`/${result.role}/dashboard`);
       } else {
         toast.error(result.message);
       }
-    }, 500);
+    } catch {
+      toast.error('Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,13 +40,33 @@ const LoginPage = () => {
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="glass-card w-full max-w-md p-8">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/favicon.png" alt="CampusEvents Logo" className="w-10 h-10 rounded-lg" />
             <span className="font-display font-bold text-xl">CampusEvents</span>
           </div>
           <h2 className="text-2xl font-display font-bold text-center mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground text-center mb-6">Sign in to your account</p>
+
+          <div className="flex justify-center mb-6">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                if (credentialResponse.credential) {
+                  const result = await loginWithGoogle(credentialResponse.credential);
+                  if (result.success) {
+                    toast.success(result.message);
+                    if (result.role) navigate(`/${result.role}/dashboard`);
+                  } else toast.error(result.message);
+                }
+              }}
+              onError={() => toast.error('Google Login Failed')}
+              useOneTap
+            />
+          </div>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 border-t border-border"></div>
+            <span className="text-xs text-muted-foreground font-medium uppercase">Or continue with email</span>
+            <div className="flex-1 border-t border-border"></div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -72,12 +94,7 @@ const LoginPage = () => {
             Don't have an account? <Link to="/signup" className="text-primary hover:underline font-medium">Sign up</Link>
           </p>
 
-          <div className="mt-6 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
-            <p className="font-semibold mb-1">Demo Credentials:</p>
-            <p>Admin: admin@campus.edu / admin123</p>
-            <p>Organizer: priya@campus.edu / org123</p>
-            <p>Student: ananya@campus.edu / stu123</p>
-          </div>
+
         </div>
       </div>
     </PublicLayout>

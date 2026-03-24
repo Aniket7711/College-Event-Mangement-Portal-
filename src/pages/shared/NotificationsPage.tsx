@@ -6,7 +6,7 @@ import { Bell } from 'lucide-react';
 
 const NotificationsPage = () => {
   const { user, notifications, markNotificationRead } = useApp();
-  const myNotifs = notifications.filter(n => n.userId === user?.id).sort((a, b) =>
+  const myNotifs = [...notifications].sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 

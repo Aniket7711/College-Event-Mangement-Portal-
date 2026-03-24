@@ -12,7 +12,9 @@ const StudentDashboard = () => {
     const evt = events.find(e => e.id === r.eventId);
     return evt && new Date(evt.date) >= new Date() && r.status === 'registered';
   }).length;
-  const approvedEvents = events.filter(e => e.status === 'approved').slice(0, 3);
+  
+  const isEligible = (e: any) => !e.targetAudience || e.targetAudience === 'All Departments' || e.targetAudience === user?.department;
+  const approvedEvents = events.filter(e => ['approved', 'completed'].includes(e.status) && isEligible(e)).slice(0, 3);
 
   return (
     <DashboardLayout>

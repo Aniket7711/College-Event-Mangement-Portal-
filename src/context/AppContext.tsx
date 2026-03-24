@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Event, Registration, Feedback, Notification, UserRole, EventStatus, RegistrationStatus } from '@/types';
-import { MOCK_USERS, MOCK_EVENTS, MOCK_REGISTRATIONS, MOCK_FEEDBACK, MOCK_NOTIFICATIONS } from '@/data/mockData';
-import { v4 as uuid } from 'uuid';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { User, Event, Registration, Feedback, Notification, UserRole } from '@/types';
+import { authService } from '@/services/authService';
+import { eventService } from '@/services/eventService';
+import { registrationService } from '@/services/registrationService';
+import { feedbackService } from '@/services/feedbackService';
+import { notificationService } from '@/services/notificationService';
+import { userService } from '@/services/userService';
 
 interface AppContextType {
   user: User | null;
@@ -10,23 +14,30 @@ interface AppContextType {
   registrations: Registration[];
   feedbacks: Feedback[];
   notifications: Notification[];
-  login: (email: string, password: string) => { success: boolean; message: string };
-  signup: (data: Omit<User, 'id' | 'isActive' | 'createdAt' | 'avatar'>) => { success: boolean; message: string };
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string; role?: string }>;
+  loginWithGoogle: (token: string) => Promise<{ success: boolean; message: string; role?: string }>;
+  signup: (data: { name: string; email: string; password: string; role: UserRole; rollNumber: string; department: string; year: string }) => Promise<{ success: boolean; message: string; role?: string }>;
   logout: () => void;
-  createEvent: (event: Omit<Event, 'id' | 'createdAt' | 'registeredCount' | 'status'>) => void;
-  updateEvent: (id: string, data: Partial<Event>) => void;
-  deleteEvent: (id: string) => void;
-  approveEvent: (id: string) => void;
-  rejectEvent: (id: string, reason: string) => void;
-  completeEvent: (id: string) => void;
-  cancelEvent: (id: string) => void;
-  registerForEvent: (eventId: string) => { success: boolean; message: string };
-  cancelRegistration: (regId: string) => void;
-  checkIn: (qrToken: string, scannerId: string) => { success: boolean; message: string; registration?: Registration };
-  submitFeedback: (eventId: string, rating: number, comment: string) => void;
-  markNotificationRead: (id: string) => void;
-  toggleUserStatus: (id: string) => void;
-  updateProfile: (data: Partial<User>) => void;
+  createEvent: (event: Partial<Event>) => Promise<void>;
+  updateEvent: (id: string, data: Partial<Event>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
+  approveEvent: (id: string) => Promise<void>;
+  rejectEvent: (id: string, reason: string) => Promise<void>;
+  completeEvent: (id: string) => Promise<void>;
+  cancelEvent: (id: string) => Promise<void>;
+  registerForEvent: (eventId: string) => Promise<{ success: boolean; message: string }>;
+  cancelRegistration: (regId: string) => Promise<void>;
+  checkIn: (qrToken: string) => Promise<{ success: boolean; message: string; registration?: Registration }>;
+  submitFeedback: (eventId: string, rating: number, comment: string) => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  toggleUserStatus: (id: string) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  refreshEvents: () => Promise<void>;
+  refreshRegistrations: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
+  refreshUsers: () => Promise<void>;
+  refreshFeedback: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -37,156 +48,236 @@ export const useApp = () => {
   return ctx;
 };
 
-const loadState = <T,>(key: string, fallback: T): T => {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch { return fallback; }
-};
-
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(loadState('campus_user', null));
-  const [users, setUsers] = useState<User[]>(loadState('campus_users', MOCK_USERS));
-  const [events, setEvents] = useState<Event[]>(loadState('campus_events', MOCK_EVENTS));
-  const [registrations, setRegistrations] = useState<Registration[]>(loadState('campus_regs', MOCK_REGISTRATIONS));
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>(loadState('campus_feedback', MOCK_FEEDBACK));
-  const [notifications, setNotifications] = useState<Notification[]>(loadState('campus_notifs', MOCK_NOTIFICATIONS));
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('campus_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [users, setUsers] = useState<User[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => { localStorage.setItem('campus_user', JSON.stringify(user)); }, [user]);
-  useEffect(() => { localStorage.setItem('campus_users', JSON.stringify(users)); }, [users]);
-  useEffect(() => { localStorage.setItem('campus_events', JSON.stringify(events)); }, [events]);
-  useEffect(() => { localStorage.setItem('campus_regs', JSON.stringify(registrations)); }, [registrations]);
-  useEffect(() => { localStorage.setItem('campus_feedback', JSON.stringify(feedbacks)); }, [feedbacks]);
-  useEffect(() => { localStorage.setItem('campus_notifs', JSON.stringify(notifications)); }, [notifications]);
+  // Persist user to localStorage
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('campus_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('campus_user');
+    }
+  }, [user]);
 
-  const addNotification = (userId: string, title: string, message: string, type: Notification['type'] = 'info') => {
-    const notif: Notification = { id: uuid(), userId, title, message, type, isRead: false, createdAt: new Date().toISOString() };
-    setNotifications(prev => [notif, ...prev]);
-  };
+  // Refresh functions
+  const refreshEvents = useCallback(async () => {
+    try {
+      const data = await eventService.getEvents();
+      setEvents(data);
+    } catch (err) { console.error('Failed to load events', err); }
+  }, []);
 
-  const login = (email: string, password: string) => {
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) return { success: false, message: 'Invalid email or password' };
-    if (!found.isActive) return { success: false, message: 'Account is deactivated. Contact admin.' };
-    setUser(found);
-    return { success: true, message: 'Login successful' };
-  };
+  const refreshRegistrations = useCallback(async () => {
+    if (!user) { setRegistrations([]); return; }
+    try {
+      const data = await registrationService.getRegistrations();
+      setRegistrations(data);
+    } catch (err) { console.error('Failed to load registrations', err); }
+  }, [user]);
 
-  const signup = (data: Omit<User, 'id' | 'isActive' | 'createdAt' | 'avatar'>) => {
-    if (users.find(u => u.email === data.email)) return { success: false, message: 'Email already registered' };
-    const newUser: User = { ...data, id: uuid(), isActive: true, createdAt: new Date().toISOString(), avatar: '' };
-    setUsers(prev => [...prev, newUser]);
-    setUser(newUser);
-    return { success: true, message: 'Account created successfully' };
-  };
+  const refreshNotifications = useCallback(async () => {
+    if (!user) { setNotifications([]); return; }
+    try {
+      const data = await notificationService.getNotifications();
+      setNotifications(data);
+    } catch (err) { console.error('Failed to load notifications', err); }
+  }, [user]);
 
-  const logout = () => setUser(null);
+  const refreshUsers = useCallback(async () => {
+    if (!user || user.role !== 'admin') return;
+    try {
+      const data = await userService.getUsers();
+      setUsers(data);
+    } catch (err) { console.error('Failed to load users', err); }
+  }, [user]);
 
-  const createEvent = (data: Omit<Event, 'id' | 'createdAt' | 'registeredCount' | 'status'>) => {
-    const evt: Event = { ...data, id: uuid(), registeredCount: 0, status: 'pending', createdAt: new Date().toISOString() };
-    setEvents(prev => [...prev, evt]);
-    addNotification(data.organizerId, 'Event Created', `Your event "${data.title}" has been submitted for approval.`, 'info');
-  };
+  const refreshFeedback = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await feedbackService.getFeedback();
+      setFeedbacks(data);
+    } catch (err) { console.error('Failed to load feedback', err); }
+  }, [user]);
 
-  const updateEvent = (id: string, data: Partial<Event>) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-  };
+  // Load data on mount / login
+  useEffect(() => {
+    refreshEvents();
+  }, [refreshEvents]);
 
-  const deleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
-  };
+  useEffect(() => {
+    if (user) {
+      refreshRegistrations();
+      refreshNotifications();
+      refreshFeedback();
+      if (user.role === 'admin') refreshUsers();
+    }
+  }, [user, refreshRegistrations, refreshNotifications, refreshFeedback, refreshUsers]);
 
-  const approveEvent = (id: string) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' as EventStatus } : e));
-    const evt = events.find(e => e.id === id);
-    if (evt) addNotification(evt.organizerId, 'Event Approved', `Your event "${evt.title}" has been approved!`, 'success');
-  };
+  // Verify token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('campus_token');
+    if (token && user) {
+      authService.getMe()
+        .then(data => setUser(data.user))
+        .catch(() => {
+          localStorage.removeItem('campus_token');
+          localStorage.removeItem('campus_user');
+          setUser(null);
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const rejectEvent = (id: string, reason: string) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' as EventStatus, rejectionReason: reason } : e));
-    const evt = events.find(e => e.id === id);
-    if (evt) addNotification(evt.organizerId, 'Event Rejected', `Your event "${evt.title}" was rejected: ${reason}`, 'error');
-  };
-
-  const completeEvent = (id: string) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, status: 'completed' as EventStatus } : e));
-  };
-
-  const cancelEvent = (id: string) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, status: 'cancelled' as EventStatus } : e));
-  };
-
-  const registerForEvent = (eventId: string) => {
-    if (!user) return { success: false, message: 'Please login first' };
-    const evt = events.find(e => e.id === eventId);
-    if (!evt) return { success: false, message: 'Event not found' };
-    if (evt.status !== 'approved') return { success: false, message: 'Event is not available for registration' };
-    if (new Date(evt.registrationDeadline) < new Date()) return { success: false, message: 'Registration deadline has passed' };
-    if (evt.registeredCount >= evt.totalSeats) return { success: false, message: 'Event is full' };
-    if (registrations.find(r => r.studentId === user.id && r.eventId === eventId && r.status !== 'cancelled'))
-      return { success: false, message: 'You are already registered' };
-
-    const reg: Registration = {
-      id: uuid(), studentId: user.id, studentName: user.name, studentEmail: user.email,
-      studentRollNumber: user.rollNumber, eventId, eventTitle: evt.title,
-      status: 'registered', qrToken: uuid(), registeredAt: new Date().toISOString()
-    };
-    setRegistrations(prev => [...prev, reg]);
-    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, registeredCount: e.registeredCount + 1 } : e));
-    addNotification(user.id, 'Registration Confirmed', `You are registered for "${evt.title}".`, 'success');
-    return { success: true, message: 'Registration successful!' };
-  };
-
-  const cancelRegistration = (regId: string) => {
-    const reg = registrations.find(r => r.id === regId);
-    if (reg) {
-      setRegistrations(prev => prev.map(r => r.id === regId ? { ...r, status: 'cancelled' as RegistrationStatus } : r));
-      setEvents(prev => prev.map(e => e.id === reg.eventId ? { ...e, registeredCount: Math.max(0, e.registeredCount - 1) } : e));
+  const login = async (email: string, password: string): Promise<{ success: boolean; message: string; role?: string }> => {
+    try {
+      const data = await authService.login(email, password);
+      localStorage.setItem('campus_token', data.token);
+      setUser(data.user);
+      return { success: true, message: 'Login successful', role: data.user.role };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Login failed' };
     }
   };
 
-  const checkIn = (qrToken: string, scannerId: string) => {
-    const reg = registrations.find(r => r.qrToken === qrToken);
-    if (!reg) return { success: false, message: 'Invalid QR code' };
-    if (reg.status === 'cancelled') return { success: false, message: 'Registration was cancelled' };
-    if (reg.checkedInAt) return { success: false, message: 'Already checked in' };
-    const updated = { ...reg, status: 'attended' as RegistrationStatus, checkedInAt: new Date().toISOString() };
-    setRegistrations(prev => prev.map(r => r.qrToken === qrToken ? updated : r));
-    return { success: true, message: `${reg.studentName} checked in successfully!`, registration: updated };
+  const loginWithGoogle = async (token: string): Promise<{ success: boolean; message: string; role?: string }> => {
+    try {
+      const data = await authService.loginWithGoogle(token);
+      localStorage.setItem('campus_token', data.token);
+      setUser(data.user);
+      return { success: true, message: 'Google login successful', role: data.user.role };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Google login failed' };
+    }
   };
 
-  const submitFeedback = (eventId: string, rating: number, comment: string) => {
-    if (!user) return;
-    const evt = events.find(e => e.id === eventId);
-    const fb: Feedback = {
-      id: uuid(), eventId, eventTitle: evt?.title || '', studentId: user.id,
-      studentName: user.name, rating, comment, createdAt: new Date().toISOString()
-    };
-    setFeedbacks(prev => [...prev, fb]);
+  const signup = async (userData: { name: string; email: string; password: string; role: UserRole; rollNumber: string; department: string; year: string }): Promise<{ success: boolean; message: string; role?: string }> => {
+    try {
+      const data = await authService.signup(userData);
+      localStorage.setItem('campus_token', data.token);
+      setUser(data.user);
+      return { success: true, message: 'Account created successfully', role: data.user.role };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Signup failed' };
+    }
   };
 
-  const markNotificationRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  const logout = () => {
+    localStorage.removeItem('campus_token');
+    localStorage.removeItem('campus_user');
+    setUser(null);
+    setRegistrations([]);
+    setNotifications([]);
+    setFeedbacks([]);
+    setUsers([]);
   };
 
-  const toggleUserStatus = (id: string) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u));
+  const createEvent = async (eventData: Partial<Event>) => {
+    const newEvent = await eventService.createEvent(eventData);
+    setEvents(prev => [newEvent, ...prev]);
+    refreshNotifications();
   };
 
-  const updateProfile = (data: Partial<User>) => {
-    if (!user) return;
-    const updated = { ...user, ...data };
+  const updateEvent = async (id: string, data: Partial<Event>) => {
+    const updated = await eventService.updateEvent(id, data);
+    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+  };
+
+  const deleteEvent = async (id: string) => {
+    await eventService.deleteEvent(id);
+    setEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const approveEvent = async (id: string) => {
+    const updated = await eventService.approveEvent(id);
+    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+  };
+
+  const rejectEvent = async (id: string, reason: string) => {
+    const updated = await eventService.rejectEvent(id, reason);
+    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+  };
+
+  const completeEvent = async (id: string) => {
+    const updated = await eventService.completeEvent(id);
+    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+  };
+
+  const cancelEvent = async (id: string) => {
+    const updated = await eventService.cancelEvent(id);
+    setEvents(prev => prev.map(e => e.id === id ? updated : e));
+  };
+
+  const registerForEvent = async (eventId: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const reg = await registrationService.register(eventId);
+      setRegistrations(prev => [reg, ...prev]);
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, registeredCount: e.registeredCount + 1 } : e));
+      refreshNotifications();
+      return { success: true, message: 'Registration successful!' };
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Registration failed' };
+    }
+  };
+
+  const cancelRegistration = async (regId: string) => {
+    const updated = await registrationService.cancelRegistration(regId);
+    setRegistrations(prev => prev.map(r => r.id === regId ? updated : r));
+    refreshEvents();
+  };
+
+  const checkIn = async (qrToken: string): Promise<{ success: boolean; message: string; registration?: Registration }> => {
+    try {
+      const result = await registrationService.checkIn(qrToken);
+      if (result.registration) {
+        setRegistrations(prev => prev.map(r => r.qrToken === qrToken ? result.registration! : r));
+      }
+      return result;
+    } catch (err: any) {
+      return { success: false, message: err.response?.data?.message || 'Check-in failed' };
+    }
+  };
+
+  const submitFeedback = async (eventId: string, rating: number, comment: string) => {
+    const fb = await feedbackService.submitFeedback(eventId, rating, comment);
+    setFeedbacks(prev => [fb, ...prev]);
+  };
+
+  const markNotificationRead = async (id: string) => {
+    const updated = await notificationService.markAsRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? updated : n));
+  };
+
+  const toggleUserStatus = async (id: string) => {
+    const updated = await userService.toggleUserStatus(id);
+    setUsers(prev => prev.map(u => u.id === id ? updated : u));
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    const updated = await userService.updateProfile(data);
     setUser(updated);
-    setUsers(prev => prev.map(u => u.id === user.id ? updated : u));
+    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
   };
 
   return (
     <AppContext.Provider value={{
-      user, users, events, registrations, feedbacks, notifications,
-      login, signup, logout, createEvent, updateEvent, deleteEvent,
+      user, users, events, registrations, feedbacks, notifications, loading,
+      login, loginWithGoogle, signup, logout, createEvent, updateEvent, deleteEvent,
       approveEvent, rejectEvent, completeEvent, cancelEvent,
       registerForEvent, cancelRegistration, checkIn, submitFeedback,
-      markNotificationRead, toggleUserStatus, updateProfile
+      markNotificationRead, toggleUserStatus, updateProfile,
+      refreshEvents, refreshRegistrations, refreshNotifications, refreshUsers, refreshFeedback,
     }}>
       {children}
     </AppContext.Provider>

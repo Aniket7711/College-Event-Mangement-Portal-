@@ -15,7 +15,7 @@ const CreateEventPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: '', shortDescription: '', fullDescription: '', category: 'Technical' as EventCategory,
-    department: user?.department || '', venue: '', mode: 'offline' as EventMode,
+    department: user?.department || '', targetAudience: 'All Departments', venue: '', mode: 'offline' as EventMode,
     date: '', startTime: '', endTime: '', registrationDeadline: '',
     totalSeats: 50, posterUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800',
     rules: '', contactEmail: user?.email || '', contactPhone: '', tags: '',
@@ -23,18 +23,22 @@ const CreateEventPage = () => {
 
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.date || !form.venue) { toast.error('Fill all required fields'); return; }
-    createEvent({
-      ...form,
-      organizerId: user!.id,
-      organizerName: user!.name,
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-      totalSeats: Number(form.totalSeats),
-    });
-    toast.success('Event created and submitted for approval!');
-    navigate('/organizer/events');
+    try {
+      await createEvent({
+        ...form,
+        organizerId: user!.id,
+        organizerName: user!.name,
+        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        totalSeats: Number(form.totalSeats),
+      });
+      toast.success('Event created and submitted for approval!');
+      navigate('/organizer/events');
+    } catch {
+      toast.error('Failed to create event');
+    }
   };
 
   return (
@@ -54,7 +58,7 @@ const CreateEventPage = () => {
             <Label>Full Description</Label>
             <Textarea value={form.fullDescription} onChange={e => set('fullDescription', e.target.value)} rows={4} placeholder="Detailed description" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Category</Label>
               <Select value={form.category} onValueChange={v => set('category', v)}>
@@ -67,6 +71,16 @@ const CreateEventPage = () => {
               <Select value={form.department} onValueChange={v => set('department', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Target Audience</Label>
+              <Select value={form.targetAudience} onValueChange={v => set('targetAudience', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Departments">All Departments</SelectItem>
+                  {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
           </div>

@@ -49,10 +49,24 @@ const AboutPage = () => (
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-display font-semibold mb-2">Our Team</h2>
-                <p className="text-muted-foreground">
-                  Built by a passionate team of students as a final year project. CampusEvents is designed to be a practical, production-ready solution for college event management.
+                <h2 className="text-xl font-display font-semibold mb-2">Our Team (3rd Year)</h2>
+                <p className="text-muted-foreground mb-4">
+                  CampusEvents was built by a passionate team of 3rd-year students, designed to be a practical, production-ready solution for college event management.
                 </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-medium text-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Aniket Jaiswal
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Akshat Singh Bisht
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Sonia
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Mahima Singh
+                  </div>
+                </div>
               </div>
             </div>
           </section>

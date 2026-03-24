@@ -13,9 +13,9 @@ const QRScannerPage = () => {
   const [manualToken, setManualToken] = useState('');
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const handleManualCheckIn = () => {
+  const handleManualCheckIn = async () => {
     if (!manualToken.trim()) return;
-    const res = checkIn(manualToken.trim(), user?.id || '');
+    const res = await checkIn(manualToken.trim());
     setResult(res);
     if (res.success) setManualToken('');
   };

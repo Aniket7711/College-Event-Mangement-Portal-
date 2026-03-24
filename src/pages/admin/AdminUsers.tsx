@@ -38,7 +38,7 @@ const AdminUsers = () => {
                   <td className="p-3">
                     {u.role !== 'admin' && (
                       <Button size="sm" variant={u.isActive ? 'destructive' : 'default'}
-                        onClick={() => { toggleUserStatus(u.id); toast.success(`User ${u.isActive ? 'deactivated' : 'activated'}`); }}>
+                        onClick={async () => { await toggleUserStatus(u.id); toast.success(`User ${u.isActive ? 'deactivated' : 'activated'}`); }}>
                         {u.isActive ? 'Deactivate' : 'Activate'}
                       </Button>
                     )}

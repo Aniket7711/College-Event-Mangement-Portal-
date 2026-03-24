@@ -10,9 +10,9 @@ const ProfilePage = () => {
   const { user, updateProfile } = useApp();
   const [form, setForm] = useState({ name: user?.name || '', department: user?.department || '', year: user?.year || '' });
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(form);
+    await updateProfile(form);
     toast.success('Profile updated!');
   };
 

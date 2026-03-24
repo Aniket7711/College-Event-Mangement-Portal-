@@ -11,10 +11,10 @@ const OrganizerEvents = () => {
   const { user, events, registrations, deleteEvent, completeEvent, cancelEvent } = useApp();
   const myEvents = events.filter(e => e.organizerId === user?.id);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const evt = events.find(e => e.id === id);
     if (evt && (evt.status === 'pending' || evt.status === 'cancelled')) {
-      deleteEvent(id);
+      await deleteEvent(id);
       toast.success('Event deleted');
     } else {
       toast.error('Can only delete pending or cancelled events');
@@ -67,7 +67,7 @@ const OrganizerEvents = () => {
                           <Button size="sm" variant="outline" asChild>
                             <Link to={`/organizer/events/${evt.id}/scanner`}><QrCode className="w-3 h-3 mr-1" />Scanner</Link>
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => { completeEvent(evt.id); toast.success('Marked complete'); }}>
+                          <Button size="sm" variant="outline" onClick={async () => { await completeEvent(evt.id); toast.success('Marked complete'); }}>
                             <CheckCircle className="w-3 h-3 mr-1" />Complete
                           </Button>
                         </>

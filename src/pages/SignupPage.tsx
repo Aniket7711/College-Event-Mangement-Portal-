@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Calendar } from 'lucide-react';
 import { DEPARTMENTS } from '@/types';
+import { GoogleLogin } from '@react-oauth/google';
 
 const SignupPage = () => {
-  const { signup } = useApp();
+  const { signup, loginWithGoogle } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirmPassword: '',
@@ -19,19 +19,22 @@ const SignupPage = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) { toast.error('Passwords do not match'); return; }
     if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setLoading(true);
-    setTimeout(() => {
-      const result = signup({ ...form, password: form.password });
-      setLoading(false);
+    try {
+      const result = await signup({ ...form, password: form.password });
       if (result.success) {
         toast.success(result.message);
         navigate(`/${form.role}/dashboard`);
       } else toast.error(result.message);
-    }, 500);
+    } catch {
+      toast.error('Signup failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const set = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
@@ -41,13 +44,33 @@ const SignupPage = () => {
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="glass-card w-full max-w-lg p-8">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/favicon.png" alt="CampusEvents Logo" className="w-10 h-10 rounded-lg" />
             <span className="font-display font-bold text-xl">CampusEvents</span>
           </div>
           <h2 className="text-2xl font-display font-bold text-center mb-1">Create Account</h2>
           <p className="text-sm text-muted-foreground text-center mb-6">Join the campus event community</p>
+
+          <div className="flex justify-center mb-6">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                if (credentialResponse.credential) {
+                  const result = await loginWithGoogle(credentialResponse.credential);
+                  if (result.success) {
+                    toast.success(result.message);
+                    if (result.role) navigate(`/${result.role}/dashboard`);
+                  } else toast.error(result.message);
+                }
+              }}
+              onError={() => toast.error('Google Signup Failed')}
+              text="signup_with"
+            />
+          </div>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 border-t border-border"></div>
+            <span className="text-xs text-muted-foreground font-medium uppercase">Or register with email</span>
+            <div className="flex-1 border-t border-border"></div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

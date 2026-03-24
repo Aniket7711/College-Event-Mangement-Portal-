@@ -26,10 +26,10 @@ const EventDetailPage = () => {
   const deadlinePassed = new Date(event.registrationDeadline) < new Date();
   const seatsLeft = event.totalSeats - event.registeredCount;
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!user) { navigate('/login'); return; }
     if (user.role !== 'student') { toast.error('Only students can register'); return; }
-    const result = registerForEvent(event.id);
+    const result = await registerForEvent(event.id);
     if (result.success) toast.success(result.message);
     else toast.error(result.message);
   };

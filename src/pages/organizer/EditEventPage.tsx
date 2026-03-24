@@ -26,9 +26,9 @@ const EditEventPage = () => {
 
   const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateEvent(event.id, { ...form, tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean) });
+    await updateEvent(event.id, { ...form, tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean) });
     toast.success('Event updated!');
     navigate('/organizer/events');
   };
@@ -41,7 +41,7 @@ const EditEventPage = () => {
           <div><Label>Title</Label><Input value={form.title || ''} onChange={e => set('title', e.target.value)} required /></div>
           <div><Label>Short Description</Label><Input value={form.shortDescription || ''} onChange={e => set('shortDescription', e.target.value)} /></div>
           <div><Label>Full Description</Label><Textarea value={form.fullDescription || ''} onChange={e => set('fullDescription', e.target.value)} rows={4} /></div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>Category</Label>
               <Select value={form.category || ''} onValueChange={v => set('category', v)}>
@@ -54,6 +54,16 @@ const EditEventPage = () => {
               <Select value={form.department || ''} onValueChange={v => set('department', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Target Audience</Label>
+              <Select value={form.targetAudience || 'All Departments'} onValueChange={v => set('targetAudience', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Departments">All Departments</SelectItem>
+                  {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
           </div>

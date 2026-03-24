@@ -18,14 +18,14 @@ const StudentRegistrations = () => {
 
   const myRegs = registrations.filter(r => r.studentId === user?.id && r.status !== 'cancelled');
 
-  const handleCancel = (regId: string) => {
-    cancelRegistration(regId);
+  const handleCancel = async (regId: string) => {
+    await cancelRegistration(regId);
     toast.success('Registration cancelled');
   };
 
-  const handleFeedback = (eventId: string) => {
+  const handleFeedback = async (eventId: string) => {
     if (!comment.trim()) { toast.error('Please add a comment'); return; }
-    submitFeedback(eventId, rating, comment);
+    await submitFeedback(eventId, rating, comment);
     toast.success('Feedback submitted!');
     setFeedbackFor(null);
     setComment('');

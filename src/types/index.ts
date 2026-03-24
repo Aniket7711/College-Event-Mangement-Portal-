@@ -25,6 +25,7 @@ export interface Event {
   fullDescription: string;
   category: EventCategory;
   department: string;
+  targetAudience: string;
   organizerId: string;
   organizerName: string;
   venue: string;

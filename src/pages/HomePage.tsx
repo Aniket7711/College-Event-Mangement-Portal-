@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { PublicLayout } from '@/components/layout/Layouts';
 import EventCard from '@/components/shared/EventCard';
@@ -6,8 +6,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, Users, Award, Zap, Shield, QrCode } from 'lucide-react';
 
 const HomePage = () => {
-  const { events, registrations, users } = useApp();
-  const approvedEvents = events.filter(e => e.status === 'approved');
+  const { user, events, registrations, users } = useApp();
+
+  // Redirect to dashboard if logged in
+  if (user && user.role) {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
+  }
+
+  const approvedEvents = events.filter(e => 
+    ['approved', 'completed'].includes(e.status) && (!e.targetAudience || e.targetAudience === 'All Departments')
+  );
   const featured = approvedEvents.slice(0, 3);
 
   const stats = [
@@ -43,7 +51,7 @@ const HomePage = () => {
               <Button size="lg" asChild>
                 <Link to="/events">Browse Events <ArrowRight className="w-4 h-4 ml-2" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" asChild>
+              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" asChild>
                 <Link to="/signup">Get Started</Link>
               </Button>
             </div>

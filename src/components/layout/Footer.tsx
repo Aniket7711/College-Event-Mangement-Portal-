@@ -7,9 +7,7 @@ const Footer = () => (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/favicon.png" alt="CampusEvents Logo" className="w-9 h-9 opacity-80" />
             <span className="font-display font-bold text-lg">CampusEvents</span>
           </div>
           <p className="text-sm text-sidebar-foreground/70">

@@ -14,9 +14,9 @@ const AdminPendingEvents = () => {
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
     if (!reason.trim()) { toast.error('Please provide a reason'); return; }
-    rejectEvent(id, reason);
+    await rejectEvent(id, reason);
     toast.success('Event rejected');
     setRejectId(null);
     setReason('');
@@ -44,7 +44,7 @@ const AdminPendingEvents = () => {
                     <Button size="sm" variant="outline" asChild>
                       <Link to={`/events/${evt.id}`}><Eye className="w-3 h-3 mr-1" />View</Link>
                     </Button>
-                    <Button size="sm" onClick={() => { approveEvent(evt.id); toast.success('Event approved!'); }}>
+                    <Button size="sm" onClick={async () => { await approveEvent(evt.id); toast.success('Event approved!'); }}>
                       <Check className="w-3 h-3 mr-1" />Approve
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => setRejectId(rejectId === evt.id ? null : evt.id)}>

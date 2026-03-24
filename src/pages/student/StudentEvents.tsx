@@ -4,8 +4,10 @@ import EventCard from '@/components/shared/EventCard';
 import EmptyState from '@/components/shared/EmptyState';
 
 const StudentEvents = () => {
-  const { events } = useApp();
-  const approved = events.filter(e => e.status === 'approved');
+  const { events, user } = useApp();
+  
+  const isEligible = (e: any) => !e.targetAudience || e.targetAudience === 'All Departments' || e.targetAudience === user?.department;
+  const approved = events.filter(e => ['approved', 'completed'].includes(e.status) && isEligible(e));
 
   return (
     <DashboardLayout>

@@ -17,7 +17,7 @@ const EventsPage = () => {
   const [sort, setSort] = useState('newest');
 
   const filtered = useMemo(() => {
-    let result = events.filter(e => e.status === 'approved');
+    let result = events.filter(e => ['approved', 'completed'].includes(e.status));
     if (search) result = result.filter(e =>
       e.title.toLowerCase().includes(search.toLowerCase()) ||
       e.shortDescription.toLowerCase().includes(search.toLowerCase())
