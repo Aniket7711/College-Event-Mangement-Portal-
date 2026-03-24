@@ -3,11 +3,12 @@ import { DashboardLayout } from '@/components/layout/Layouts';
 import EmptyState from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { QrCode, X, MessageSquare } from 'lucide-react';
+import { QrCode, X, MessageSquare, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Textarea } from '@/components/ui/textarea';
+import { downloadParticipationCertificate } from '@/lib/certificate';
 
 const StudentRegistrations = () => {
   const { user, registrations, events, cancelRegistration, submitFeedback, feedbacks } = useApp();
@@ -30,6 +31,24 @@ const StudentRegistrations = () => {
     setFeedbackFor(null);
     setComment('');
     setRating(5);
+  };
+
+  const handleDownloadCertificate = (regId: string) => {
+    const registration = myRegs.find((item) => item.id === regId);
+    const event = registration ? events.find((item) => item.id === registration.eventId) : null;
+
+    if (!registration?.certificateCode) {
+      toast.error('Certificate is not available yet');
+      return;
+    }
+
+    downloadParticipationCertificate({
+      studentName: registration.studentName,
+      eventTitle: registration.eventTitle,
+      eventDate: event?.date,
+      certificateCode: registration.certificateCode,
+      issuedAt: registration.certificateIssuedAt,
+    });
   };
 
   if (myRegs.length === 0) return (
@@ -70,6 +89,11 @@ const StudentRegistrations = () => {
                     {reg.status === 'attended' && !hasFeedback && (
                       <Button size="sm" variant="outline" onClick={() => setFeedbackFor(reg.eventId)}>
                         <MessageSquare className="w-4 h-4 mr-1" /> Feedback
+                      </Button>
+                    )}
+                    {reg.status === 'attended' && (
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadCertificate(reg.id)}>
+                        <Download className="w-4 h-4 mr-1" /> Certificate
                       </Button>
                     )}
                     {reg.status === 'registered' && evt && new Date(evt.registrationDeadline) > new Date() && (

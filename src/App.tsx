@@ -16,6 +16,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
+import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentEvents from "./pages/student/StudentEvents";
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
 
             {/* Student Routes */}
             <Route path="/student/dashboard" element={<RoleProtectedRoute roles={['student']}><StudentDashboard /></RoleProtectedRoute>} />

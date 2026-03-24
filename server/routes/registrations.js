@@ -7,6 +7,12 @@ const { auth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+const generateCertificateCode = (registrationId) => {
+  const stamp = Date.now().toString(36).toUpperCase();
+  const suffix = registrationId.toString().slice(-6).toUpperCase();
+  return `CERT-${stamp}-${suffix}`;
+};
+
 // GET /api/registrations — filtered by role
 router.get('/', auth, async (req, res) => {
   try {
@@ -29,6 +35,37 @@ router.get('/event/:eventId', auth, async (req, res) => {
     res.json(registrations);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/registrations/verify/:code — public certificate verification
+router.get('/verify/:code', async (req, res) => {
+  try {
+    const registration = await Registration.findOne({
+      certificateCode: req.params.code,
+      status: 'attended',
+    });
+
+    if (!registration) {
+      return res.status(404).json({ valid: false, message: 'Certificate not found or invalid' });
+    }
+
+    const event = await Event.findById(registration.eventId).select('title date venue organizerName');
+
+    return res.json({
+      valid: true,
+      certificate: {
+        code: registration.certificateCode,
+        issuedAt: registration.certificateIssuedAt,
+        studentName: registration.studentName,
+        eventTitle: registration.eventTitle,
+        eventDate: event?.date || null,
+        venue: event?.venue || null,
+        organizerName: event?.organizerName || null,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ valid: false, message: 'Server error', error: error.message });
   }
 });
 
@@ -114,7 +151,16 @@ router.post('/checkin', auth, requireRole('organizer', 'admin'), async (req, res
 
     registration.status = 'attended';
     registration.checkedInAt = new Date().toISOString();
+    registration.certificateCode = registration.certificateCode || generateCertificateCode(registration._id);
+    registration.certificateIssuedAt = new Date().toISOString();
     await registration.save();
+
+    await Notification.create({
+      userId: registration.studentId,
+      title: 'Certificate Issued',
+      message: `Your participation certificate for "${registration.eventTitle}" is now available.`,
+      type: 'success',
+    });
 
     res.json({ success: true, message: `${registration.studentName} checked in successfully!`, registration });
   } catch (error) {

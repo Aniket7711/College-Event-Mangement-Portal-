@@ -20,6 +20,7 @@ const Footer = () => (
             <Link to="/events" className="block hover:text-sidebar-foreground transition-colors">Browse Events</Link>
             <Link to="/about" className="block hover:text-sidebar-foreground transition-colors">About Us</Link>
             <Link to="/contact" className="block hover:text-sidebar-foreground transition-colors">Contact</Link>
+            <Link to="/verify-certificate" className="block hover:text-sidebar-foreground transition-colors">Verify Certificate</Link>
           </div>
         </div>
         <div>

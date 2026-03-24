@@ -57,7 +57,23 @@ export interface Registration {
   status: RegistrationStatus;
   qrToken: string;
   checkedInAt?: string;
+  certificateCode?: string;
+  certificateIssuedAt?: string;
   registeredAt: string;
+}
+
+export interface CertificateVerification {
+  valid: boolean;
+  message?: string;
+  certificate?: {
+    code: string;
+    issuedAt: string;
+    studentName: string;
+    eventTitle: string;
+    eventDate: string | null;
+    venue: string | null;
+    organizerName: string | null;
+  };
 }
 
 export interface Feedback {

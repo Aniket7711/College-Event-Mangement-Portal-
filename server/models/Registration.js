@@ -13,6 +13,8 @@ const registrationSchema = new mongoose.Schema({
     default: 'registered',
   },
   qrToken: { type: String, required: true, unique: true },
+  certificateCode: { type: String, unique: true, sparse: true },
+  certificateIssuedAt: { type: String, default: null },
   checkedInAt: { type: String, default: null },
   registeredAt: { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true });

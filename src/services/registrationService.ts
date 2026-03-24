@@ -1,5 +1,5 @@
 import api from './api';
-import { Registration } from '@/types';
+import { CertificateVerification, Registration } from '@/types';
 
 export const registrationService = {
   async getRegistrations() {
@@ -25,5 +25,10 @@ export const registrationService = {
   async checkIn(qrToken: string) {
     const { data } = await api.post('/registrations/checkin', { qrToken });
     return data as { success: boolean; message: string; registration?: Registration };
+  },
+
+  async verifyCertificate(code: string) {
+    const { data } = await api.get(`/registrations/verify/${code}`);
+    return data as CertificateVerification;
   },
 };
